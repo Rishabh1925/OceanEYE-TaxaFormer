@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# UI source folder (already integrated into src/)
+/UI_exact
+
+# IDE
+/.vscode

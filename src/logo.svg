@@ -1,0 +1,13 @@
+<svg width="160" height="36" viewBox="0 0 160 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="18" cy="18" r="15" fill="url(#logoGradient)" opacity="0.2"/>
+  <path d="M18 6C11.373 6 6 11.373 6 18C6 24.627 11.373 30 18 30C24.627 30 30 24.627 30 18C30 11.373 24.627 6 18 6ZM18 8C23.523 8 28 12.477 28 18C28 23.523 23.523 28 18 28C12.477 28 8 23.523 8 18C8 12.477 12.477 8 18 8Z" fill="url(#logoGradient)"/>
+  <path d="M14 13L18 18L14 23M22 13L18 18L22 23" stroke="url(#logoGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="38" y="24" font-family="Montserrat, system-ui, sans-serif" font-size="18" font-weight="700" fill="url(#logoGradient)">Taxaformer</text>
+</svg>

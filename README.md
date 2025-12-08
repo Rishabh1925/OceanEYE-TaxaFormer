@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Taxaformer - AI-Powered eDNA Classification Platform
 
-## Getting Started
+Transform environmental DNA sequences into biodiversity insights using Nucleotide Transformer AI.
 
-First, run the development server:
+## 🌊 Features
+
+- **Nucleotide Transformer AI** - State-of-the-art deep learning for taxonomic classification
+- **PR2 + SILVA Database** - Optimized for marine and deep-sea eukaryotic diversity
+- **Interactive Mapping** - Visualize biodiversity on global maps
+- **Diversity Metrics** - Calculate species richness and Shannon index
+- **Batch Processing** - Process thousands of sequences in parallel
+- **Beautiful UI** - Modern, animated interface with dark mode support
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** Next.js 16 with React 19
+- **Styling:** Tailwind CSS v4
+- **UI Components:** Radix UI + shadcn/ui
+- **Animations:** GSAP, Three.js
+- **Maps:** Leaflet
+- **Charts:** Recharts
+- **Icons:** Lucide React
 
-## Learn More
+## 🌐 Deployment
 
-To learn more about Next.js, take a look at the following resources:
+### Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/taxaformer)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push your code to GitHub
+2. Import your repository in Vercel
+3. Vercel will automatically detect Next.js and deploy
 
-## Deploy on Vercel
+### Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+No environment variables required for basic deployment.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📁 Project Structure
+
+```
+taxaformer/
+├── src/
+│   ├── app/              # Next.js app directory
+│   │   ├── page.tsx      # Main application page
+│   │   ├── layout.tsx    # Root layout
+│   │   └── globals.css   # Global styles
+│   ├── components/       # React components
+│   │   ├── ui/          # shadcn/ui components
+│   │   ├── charts/      # Chart components
+│   │   └── *.tsx        # Page components
+│   └── lib/             # Utility functions
+├── public/              # Static assets
+└── package.json         # Dependencies
+```
+
+## 🎨 Key Components
+
+- **LiquidEther** - Animated fluid background using Three.js
+- **ModernNav** - Responsive navigation with dropdown menus
+- **MapPage** - Interactive Leaflet map for biodiversity visualization
+- **UploadPage** - File upload interface for eDNA sequences
+- **OutputPage** - Results display with charts and filters
+- **ReportPage** - Comprehensive analysis reports
+
+## 🔧 Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linter
+npm run lint
+```
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+## 👥 Authors
+
+Your Name - [GitHub](https://github.com/YOUR_USERNAME)
+
+## 🙏 Acknowledgments
+
+- Nucleotide Transformer AI team
+- PR2 and SILVA database maintainers
+- shadcn/ui for the beautiful component library
