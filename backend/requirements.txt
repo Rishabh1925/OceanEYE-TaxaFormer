@@ -1,0 +1,22 @@
+# Taxaformer Backend Dependencies
+
+# Core API Framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# File handling
+python-multipart==0.0.20
+
+# Ngrok tunneling for Kaggle hosting
+pyngrok==7.2.2
+
+# Data processing (use latest compatible with Python 3.13)
+numpy>=2.0.0
+
+# Testing
+requests==2.32.3
+
+# Optional: For advanced analysis (uncomment if needed)
+# pandas>=2.2.0
+# biopython>=1.84
+# scikit-learn>=1.5.0

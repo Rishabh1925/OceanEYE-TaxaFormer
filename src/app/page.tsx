@@ -6,6 +6,7 @@ import { Upload, Dna, Map, LineChart, Database, Layers, ChevronRight, Waves, Fis
 import ModernNav from '@/components/ModernNav';
 import UploadPage from '@/components/UploadPage';
 import ReportPage from '@/components/ReportPage';
+import ResultsPage from '@/components/ResultsPage';
 import ContactPage from '@/components/ContactPage';
 import OutputPage from '@/components/OutputPage';
 
@@ -19,7 +20,7 @@ const Card = dynamic(() => import('@/components/CardSwap').then(mod => ({ defaul
 const MapPage = dynamic(() => import('@/components/MapPage'), { ssr: false });
 
 // Taxaformer Multi-Page Application
-type PageType = 'home' | 'upload' | 'map' | 'report' | 'contact' | 'output';
+type PageType = 'home' | 'upload' | 'map' | 'report' | 'contact' | 'output' | 'results';
 
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -70,10 +71,16 @@ export default function Home() {
           icon: <Database className="w-5 h-5" />
         },
         { 
+          label: "Analysis Charts", 
+          onClick: () => handleNavigate('results'),
+          description: "View detailed charts and graphs",
+          icon: <LineChart className="w-5 h-5" />
+        },
+        { 
           label: "View Report", 
           onClick: () => handleNavigate('report'),
           description: "Generate comprehensive analysis reports",
-          icon: <LineChart className="w-5 h-5" />
+          icon: <Layers className="w-5 h-5" />
         }
       ]
     },
@@ -150,6 +157,7 @@ export default function Home() {
           {currentPage === 'upload' && <UploadPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
           {currentPage === 'map' && <MapPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
           {currentPage === 'report' && <ReportPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
+          {currentPage === 'results' && <ResultsPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
           {currentPage === 'contact' && <ContactPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
           {currentPage === 'output' && <OutputPage isDarkMode={isDarkMode} onNavigate={handleNavigate} />}
         </div>
