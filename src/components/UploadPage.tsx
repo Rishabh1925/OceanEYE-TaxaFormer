@@ -276,12 +276,22 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
       }
 
       const formData = new FormData();
-      // We send the first file in the list to the backend
-      formData.append('file', uploadedFiles[0]);
-
+      formData.append("file", uploadedFiles[0]);
+      
       // Add metadata if provided
       if (showMetadata && metadata.sampleId) {
-        formData.append('metadata', JSON.stringify(metadata));
+        formData.append("metadata", JSON.stringify({
+          sampleId: metadata.sampleId,
+          depth: metadata.location.depth ? parseFloat(metadata.location.depth) : undefined,
+          location: {
+            lat: metadata.location.latitude ? parseFloat(metadata.location.latitude) : undefined,
+            lon: metadata.location.longitude ? parseFloat(metadata.location.longitude) : undefined,
+            site: metadata.location.site
+          },
+          datetime: metadata.datetime,
+          environmental: metadata.environmental,
+          notes: metadata.notes
+        }));
       }
 
       console.log("🚀 Sending to Backend...");
