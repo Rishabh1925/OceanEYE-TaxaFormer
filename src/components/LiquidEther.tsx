@@ -72,6 +72,20 @@ export default function LiquidEther({
     const bgVec4 = new THREE.Vector4(bgColorObj.r, bgColorObj.g, bgColorObj.b, 1.0);
 
     class CommonClass {
+      width: number;
+      height: number;
+      aspect: number;
+      pixelRatio: number;
+      isMobile: boolean;
+      breakpoint: number;
+      fboWidth: number | null;
+      fboHeight: number | null;
+      time: number;
+      delta: number;
+      container: HTMLElement | null;
+      renderer: THREE.WebGLRenderer | null;
+      clock: THREE.Clock | null;
+
       constructor() {
         this.width = 0;
         this.height = 0;
