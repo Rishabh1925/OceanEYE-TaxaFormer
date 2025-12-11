@@ -29,110 +29,107 @@ import {
 export const description = "An interactive area chart"
 
 const chartData = [
-  { date: "2024-04-01", desktop: 222, mobile: 150 },
-  { date: "2024-04-02", desktop: 97, mobile: 180 },
-  { date: "2024-04-03", desktop: 167, mobile: 120 },
-  { date: "2024-04-04", desktop: 242, mobile: 260 },
-  { date: "2024-04-05", desktop: 373, mobile: 290 },
-  { date: "2024-04-06", desktop: 301, mobile: 340 },
-  { date: "2024-04-07", desktop: 245, mobile: 180 },
-  { date: "2024-04-08", desktop: 409, mobile: 320 },
-  { date: "2024-04-09", desktop: 59, mobile: 110 },
-  { date: "2024-04-10", desktop: 261, mobile: 190 },
-  { date: "2024-04-11", desktop: 327, mobile: 350 },
-  { date: "2024-04-12", desktop: 292, mobile: 210 },
-  { date: "2024-04-13", desktop: 342, mobile: 380 },
-  { date: "2024-04-14", desktop: 137, mobile: 220 },
-  { date: "2024-04-15", desktop: 120, mobile: 170 },
-  { date: "2024-04-16", desktop: 138, mobile: 190 },
-  { date: "2024-04-17", desktop: 446, mobile: 360 },
-  { date: "2024-04-18", desktop: 364, mobile: 410 },
-  { date: "2024-04-19", desktop: 243, mobile: 180 },
-  { date: "2024-04-20", desktop: 89, mobile: 150 },
-  { date: "2024-04-21", desktop: 137, mobile: 200 },
-  { date: "2024-04-22", desktop: 224, mobile: 170 },
-  { date: "2024-04-23", desktop: 138, mobile: 230 },
-  { date: "2024-04-24", desktop: 387, mobile: 290 },
-  { date: "2024-04-25", desktop: 215, mobile: 250 },
-  { date: "2024-04-26", desktop: 75, mobile: 130 },
-  { date: "2024-04-27", desktop: 383, mobile: 420 },
-  { date: "2024-04-28", desktop: 122, mobile: 180 },
-  { date: "2024-04-29", desktop: 315, mobile: 240 },
-  { date: "2024-04-30", desktop: 454, mobile: 380 },
-  { date: "2024-05-01", desktop: 165, mobile: 220 },
-  { date: "2024-05-02", desktop: 293, mobile: 310 },
-  { date: "2024-05-03", desktop: 247, mobile: 190 },
-  { date: "2024-05-04", desktop: 385, mobile: 420 },
-  { date: "2024-05-05", desktop: 481, mobile: 390 },
-  { date: "2024-05-06", desktop: 498, mobile: 520 },
-  { date: "2024-05-07", desktop: 388, mobile: 300 },
-  { date: "2024-05-08", desktop: 149, mobile: 210 },
-  { date: "2024-05-09", desktop: 227, mobile: 180 },
-  { date: "2024-05-10", desktop: 293, mobile: 330 },
-  { date: "2024-05-11", desktop: 335, mobile: 270 },
-  { date: "2024-05-12", desktop: 197, mobile: 240 },
-  { date: "2024-05-13", desktop: 197, mobile: 160 },
-  { date: "2024-05-14", desktop: 448, mobile: 490 },
-  { date: "2024-05-15", desktop: 473, mobile: 380 },
-  { date: "2024-05-16", desktop: 338, mobile: 400 },
-  { date: "2024-05-17", desktop: 499, mobile: 420 },
-  { date: "2024-05-18", desktop: 315, mobile: 350 },
-  { date: "2024-05-19", desktop: 235, mobile: 180 },
-  { date: "2024-05-20", desktop: 177, mobile: 230 },
-  { date: "2024-05-21", desktop: 82, mobile: 140 },
-  { date: "2024-05-22", desktop: 81, mobile: 120 },
-  { date: "2024-05-23", desktop: 252, mobile: 290 },
-  { date: "2024-05-24", desktop: 294, mobile: 220 },
-  { date: "2024-05-25", desktop: 201, mobile: 250 },
-  { date: "2024-05-26", desktop: 213, mobile: 170 },
-  { date: "2024-05-27", desktop: 420, mobile: 460 },
-  { date: "2024-05-28", desktop: 233, mobile: 190 },
-  { date: "2024-05-29", desktop: 78, mobile: 130 },
-  { date: "2024-05-30", desktop: 340, mobile: 280 },
-  { date: "2024-05-31", desktop: 178, mobile: 230 },
-  { date: "2024-06-01", desktop: 178, mobile: 200 },
-  { date: "2024-06-02", desktop: 470, mobile: 410 },
-  { date: "2024-06-03", desktop: 103, mobile: 160 },
-  { date: "2024-06-04", desktop: 439, mobile: 380 },
-  { date: "2024-06-05", desktop: 88, mobile: 140 },
-  { date: "2024-06-06", desktop: 294, mobile: 250 },
-  { date: "2024-06-07", desktop: 323, mobile: 370 },
-  { date: "2024-06-08", desktop: 385, mobile: 320 },
-  { date: "2024-06-09", desktop: 438, mobile: 480 },
-  { date: "2024-06-10", desktop: 155, mobile: 200 },
-  { date: "2024-06-11", desktop: 92, mobile: 150 },
-  { date: "2024-06-12", desktop: 492, mobile: 420 },
-  { date: "2024-06-13", desktop: 81, mobile: 130 },
-  { date: "2024-06-14", desktop: 426, mobile: 380 },
-  { date: "2024-06-15", desktop: 307, mobile: 350 },
-  { date: "2024-06-16", desktop: 371, mobile: 310 },
-  { date: "2024-06-17", desktop: 475, mobile: 520 },
-  { date: "2024-06-18", desktop: 107, mobile: 170 },
-  { date: "2024-06-19", desktop: 341, mobile: 290 },
-  { date: "2024-06-20", desktop: 408, mobile: 450 },
-  { date: "2024-06-21", desktop: 169, mobile: 210 },
-  { date: "2024-06-22", desktop: 317, mobile: 270 },
-  { date: "2024-06-23", desktop: 480, mobile: 530 },
-  { date: "2024-06-24", desktop: 132, mobile: 180 },
-  { date: "2024-06-25", desktop: 141, mobile: 190 },
-  { date: "2024-06-26", desktop: 434, mobile: 380 },
-  { date: "2024-06-27", desktop: 448, mobile: 490 },
-  { date: "2024-06-28", desktop: 149, mobile: 200 },
-  { date: "2024-06-29", desktop: 103, mobile: 160 },
-  { date: "2024-06-30", desktop: 446, mobile: 400 },
+  { date: "2024-04-01", sequences: 222, samples: 150 },
+  { date: "2024-04-02", sequences: 97, samples: 180 },
+  { date: "2024-04-03", sequences: 167, samples: 120 },
+  { date: "2024-04-04", sequences: 242, samples: 260 },
+  { date: "2024-04-05", sequences: 373, samples: 290 },
+  { date: "2024-04-06", sequences: 301, samples: 340 },
+  { date: "2024-04-07", sequences: 245, samples: 180 },
+  { date: "2024-04-08", sequences: 409, samples: 320 },
+  { date: "2024-04-09", sequences: 59, samples: 110 },
+  { date: "2024-04-10", sequences: 261, samples: 190 },
+  { date: "2024-04-11", sequences: 327, samples: 350 },
+  { date: "2024-04-12", sequences: 292, samples: 210 },
+  { date: "2024-04-13", sequences: 342, samples: 380 },
+  { date: "2024-04-14", sequences: 137, samples: 220 },
+  { date: "2024-04-15", sequences: 120, samples: 170 },
+  { date: "2024-04-16", sequences: 138, samples: 190 },
+  { date: "2024-04-17", sequences: 446, samples: 360 },
+  { date: "2024-04-18", sequences: 364, samples: 410 },
+  { date: "2024-04-19", sequences: 243, samples: 180 },
+  { date: "2024-04-20", sequences: 89, samples: 150 },
+  { date: "2024-04-21", sequences: 137, samples: 200 },
+  { date: "2024-04-22", sequences: 224, samples: 170 },
+  { date: "2024-04-23", sequences: 138, samples: 230 },
+  { date: "2024-04-24", sequences: 387, samples: 290 },
+  { date: "2024-04-25", sequences: 215, samples: 250 },
+  { date: "2024-04-26", sequences: 75, samples: 130 },
+  { date: "2024-04-27", sequences: 383, samples: 420 },
+  { date: "2024-04-28", sequences: 122, samples: 180 },
+  { date: "2024-04-29", sequences: 315, samples: 240 },
+  { date: "2024-04-30", sequences: 454, samples: 380 },
+  { date: "2024-05-01", sequences: 165, samples: 220 },
+  { date: "2024-05-02", sequences: 293, samples: 310 },
+  { date: "2024-05-03", sequences: 247, samples: 190 },
+  { date: "2024-05-04", sequences: 385, samples: 420 },
+  { date: "2024-05-05", sequences: 481, samples: 390 },
+  { date: "2024-05-06", sequences: 498, samples: 520 },
+  { date: "2024-05-07", sequences: 388, samples: 300 },
+  { date: "2024-05-08", sequences: 149, samples: 210 },
+  { date: "2024-05-09", sequences: 227, samples: 180 },
+  { date: "2024-05-10", sequences: 293, samples: 330 },
+  { date: "2024-05-11", sequences: 335, samples: 270 },
+  { date: "2024-05-12", sequences: 197, samples: 240 },
+  { date: "2024-05-13", sequences: 197, samples: 160 },
+  { date: "2024-05-14", sequences: 448, samples: 490 },
+  { date: "2024-05-15", sequences: 473, samples: 380 },
+  { date: "2024-05-16", sequences: 338, samples: 400 },
+  { date: "2024-05-17", sequences: 499, samples: 420 },
+  { date: "2024-05-18", sequences: 315, samples: 350 },
+  { date: "2024-05-19", sequences: 235, samples: 180 },
+  { date: "2024-05-20", sequences: 177, samples: 230 },
+  { date: "2024-05-21", sequences: 82, samples: 140 },
+  { date: "2024-05-22", sequences: 81, samples: 120 },
+  { date: "2024-05-23", sequences: 252, samples: 290 },
+  { date: "2024-05-24", sequences: 294, samples: 220 },
+  { date: "2024-05-25", sequences: 201, samples: 250 },
+  { date: "2024-05-26", sequences: 213, samples: 170 },
+  { date: "2024-05-27", sequences: 420, samples: 460 },
+  { date: "2024-05-28", sequences: 233, samples: 190 },
+  { date: "2024-05-29", sequences: 78, samples: 130 },
+  { date: "2024-05-30", sequences: 340, samples: 280 },
+  { date: "2024-05-31", sequences: 178, samples: 230 },
+  { date: "2024-06-01", sequences: 178, samples: 200 },
+  { date: "2024-06-02", sequences: 470, samples: 410 },
+  { date: "2024-06-03", sequences: 103, samples: 160 },
+  { date: "2024-06-04", sequences: 439, samples: 380 },
+  { date: "2024-06-05", sequences: 88, samples: 140 },
+  { date: "2024-06-06", sequences: 294, samples: 250 },
+  { date: "2024-06-07", sequences: 323, samples: 370 },
+  { date: "2024-06-08", sequences: 385, samples: 320 },
+  { date: "2024-06-09", sequences: 438, samples: 480 },
+  { date: "2024-06-10", sequences: 155, samples: 200 },
+  { date: "2024-06-11", sequences: 92, samples: 150 },
+  { date: "2024-06-12", sequences: 492, samples: 420 },
+  { date: "2024-06-13", sequences: 81, samples: 130 },
+  { date: "2024-06-14", sequences: 426, samples: 380 },
+  { date: "2024-06-15", sequences: 307, samples: 350 },
+  { date: "2024-06-16", sequences: 371, samples: 310 },
+  { date: "2024-06-17", sequences: 475, samples: 520 },
+  { date: "2024-06-18", sequences: 107, samples: 170 },
+  { date: "2024-06-19", sequences: 341, samples: 290 },
+  { date: "2024-06-20", sequences: 408, samples: 450 },
+  { date: "2024-06-21", sequences: 169, samples: 210 },
+  { date: "2024-06-22", sequences: 317, samples: 270 },
+  { date: "2024-06-23", sequences: 480, samples: 530 },
+  { date: "2024-06-24", sequences: 132, samples: 180 },
+  { date: "2024-06-25", sequences: 141, samples: 190 },
+  { date: "2024-06-26", sequences: 434, samples: 380 },
+  { date: "2024-06-27", sequences: 448, samples: 490 },
+  { date: "2024-06-28", sequences: 149, samples: 200 },
+  { date: "2024-06-29", sequences: 103, samples: 160 },
+  { date: "2024-06-30", sequences: 446, samples: 400 },
 ]
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  desktop: {
-    label: "Desktop",
+  sequences: {
+    label: "DNA Sequences",
     // Lighter violet for larger series
     color: "#C4B5FD",
   },
-  mobile: {
-    label: "Mobile",
+  samples: {
+    label: "Sample Files",
     // Darker violet for typically smaller series
     color: "#A855F7",
   },
@@ -161,7 +158,7 @@ export default function ChartAreaInteractive() {
         <div className="grid flex-1 gap-1">
           <CardTitle>Sequence Coverage Trends</CardTitle>
           <CardDescription>
-            Interactive area chart showing example sequencing activity over time
+            Tracking DNA sequence processing and sample file uploads over time
           </CardDescription>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
@@ -191,7 +188,7 @@ export default function ChartAreaInteractive() {
         >
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillSequences" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="#C4B5FD"
@@ -203,7 +200,7 @@ export default function ChartAreaInteractive() {
                   stopOpacity={0.06}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillSamples" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="#A855F7"
@@ -261,7 +258,7 @@ export default function ChartAreaInteractive() {
                         <div className="text-foreground mt-1.5 flex basis-full items-center border-t pt-1.5 text-xs font-medium">
                           Total
                           <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
-                            {item.payload.desktop + item.payload.mobile}
+                            {item.payload.sequences + item.payload.samples}
                           </div>
                         </div>
                       )}
@@ -271,16 +268,16 @@ export default function ChartAreaInteractive() {
               }
             />
             <Area
-              dataKey="mobile"
+              dataKey="samples"
               type="natural"
-              fill="url(#fillMobile)"
+              fill="url(#fillSamples)"
               stroke="#A855F7"
               stackId="a"
             />
             <Area
-              dataKey="desktop"
+              dataKey="sequences"
               type="natural"
-              fill="url(#fillDesktop)"
+              fill="url(#fillSequences)"
               stroke="#C4B5FD"
               stackId="a"
             />

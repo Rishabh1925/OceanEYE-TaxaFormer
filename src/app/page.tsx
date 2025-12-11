@@ -5,6 +5,10 @@ import dynamic from 'next/dynamic';
 import { Upload, Dna, Map, LineChart, Database, Layers, ChevronRight, Waves, Fish, Microscope } from 'lucide-react';
 // Import OGL for the 3D Gallery directly
 import { Renderer, Camera, Transform, Plane, Program, Mesh, Texture } from 'ogl';
+// Import analytics
+import { analytics, trackPageView, trackClick } from '@/utils/analytics';
+// Import simple analytics for testing
+import { simpleAnalytics, trackPageView as simpleTrackPageView } from '@/utils/simple-analytics';
 
 // --- Components (Assuming these exist in your project as per your structure) ---
 import ModernNav from '@/components/ModernNav';
@@ -524,6 +528,11 @@ export default function Home() {
     const newPage = page as PageType;
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Track page navigation
+    trackPageView(`/${newPage}`, `TaxaFormer - ${newPage.charAt(0).toUpperCase() + newPage.slice(1)}`);
+    // Also track with simple analytics for testing
+    simpleTrackPageView(`/${newPage}`, `TaxaFormer - ${newPage.charAt(0).toUpperCase() + newPage.slice(1)}`);
   }, []);
 
 

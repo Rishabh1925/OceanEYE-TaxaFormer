@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Upload, FileText, Database, ChevronRight, Loader2, Cpu, Zap, Brain, CheckCircle2, MapPin, Calendar, Thermometer, Info } from 'lucide-react';
 import { fetchSampleFilesFromSupabase, fetchSampleDataFromSupabase } from '../utils/supabaseClient';
+import { trackFileUpload, trackSampleSelection, trackAnalysisComplete, trackClick } from '../utils/analytics';
+import QueueStatus from './QueueStatus';
 
 // 🛑 STEP 1: PASTE YOUR NGROK URL HERE
 // Leave empty to use mock data for testing
 // Set to "" to test UI without backend, or paste your active ngrok URL
-const API_URL: string = "https://unexcited-nondepreciatively-justice.ngrok-free.dev";
+const API_URL: string = "https://unexcited-nondepreciatively-justice.ngrok-free.dev"; // Kaggle Backend with AI Model + Analytics + Queue
 
 interface UploadPageProps {
   isDarkMode: boolean;
@@ -76,6 +78,20 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
   const [loadingSamples, setLoadingSamples] = useState(false);
   const [sortBy, setSortBy] = useState<'latest' | 'heavy' | 'sequences' | 'confidence'>('latest');
 
+  // Queue system state
+  const [sessionId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      let id = sessionStorage.getItem('taxaformer_session_id');
+      if (!id) {
+        id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionStorage.setItem('taxaformer_session_id', id);
+      }
+      return id;
+    }
+    return 'anonymous';
+  });
+  const [queueStatus, setQueueStatus] = useState<string>('no_job');
+
   // Loading stages with messages
   const loadingStages = [
     { icon: Upload, text: "Uploading sequences to GPU cluster...", color: "cyan" },
@@ -138,6 +154,11 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = Array.from(e.dataTransfer.files);
       setUploadedFiles(prev => [...prev, ...files]);
+      
+      // Track file upload via drag & drop
+      files.forEach(file => {
+        trackFileUpload(file.name, file.size, file.type);
+      });
     }
   };
 
@@ -145,6 +166,11 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
     if (e.target.files && e.target.files[0]) {
       const files = Array.from(e.target.files);
       setUploadedFiles(prev => [...prev, ...files]);
+      
+      // Track file upload
+      files.forEach(file => {
+        trackFileUpload(file.name, file.size, file.type);
+      });
     }
   };
 
@@ -235,6 +261,11 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
   const handleSampleSelect = async (jobId: string) => {
     try {
       console.log("🔍 Loading sample data for job:", jobId);
+      
+      // Track sample selection
+      const sampleFile = sampleFiles.find(f => f.job_id === jobId);
+      const sampleName = sampleFile?.filename || `Sample ${jobId}`;
+      trackSampleSelection(jobId, sampleName);
       
       // Try to fetch real data from Supabase first
       const realData = await fetchSampleDataFromSupabase(jobId);
@@ -388,6 +419,9 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
         localStorage.setItem('analysisResults', JSON.stringify(mockData));
         console.log("💾 Saved mock data to localStorage");
 
+        // Track analysis completion
+        trackAnalysisComplete("2.8s", 150);
+        
         // Navigate to results
         onNavigate('output');
         return;
@@ -396,6 +430,7 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
       // If API URL is configured, try to use backend
       const formData = new FormData();
       formData.append("file", uploadedFiles[0]);
+      formData.append("session_id", sessionId);
       
       // Add metadata if provided
       if (metadata.sampleId || Object.values(metadata.location).some(v => v) || 
@@ -409,6 +444,7 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
       console.log("🚀 Sending to Backend...");
       console.log("📁 File:", uploadedFiles[0].name);
       console.log("🔗 API URL:", API_URL);
+      console.log("👤 Session ID:", sessionId);
 
       const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
@@ -440,8 +476,30 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
         localStorage.setItem('analysisResults', JSON.stringify(result.data));
         console.log("💾 Saved to localStorage");
 
+        // Track analysis completion
+        const totalSeqs = result.data?.metadata?.totalSequences || 0;
+        const processingTime = result.data?.metadata?.processingTime || "unknown";
+        trackAnalysisComplete(processingTime, totalSeqs);
+
         // Navigate to results
         onNavigate('output');
+      } else if (result.status === "queued") {
+        console.log("📋 Added to queue:", result.message);
+        setIsLoading(false);
+        setProgress(0);
+        setLoadingStage(0);
+        
+        // Show queue status instead of loading
+        alert(`📋 ${result.message}\n\nYour file has been added to the processing queue. You can see the queue status below.`);
+        return;
+      } else if (result.status === "processing") {
+        console.log("🔄 Already processing:", result.message);
+        setIsLoading(false);
+        setProgress(0);
+        setLoadingStage(0);
+        
+        alert(`🔄 ${result.message}\n\nYour file is currently being processed. Please wait...`);
+        return;
       } else {
         console.error("❌ Server returned error:", result.message);
         throw new Error("Server Error: " + (result.message || "Unknown error"));
@@ -454,7 +512,7 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
       setProgress(0);
       setLoadingStage(0);
       
-      alert(`❌ Backend Connection Failed\\n\\nError: ${errorMessage}\\n\\n🔍 Troubleshooting:\\n\\n1. Check if Kaggle backend is running\\n2. Verify ngrok URL is correct:\\n   Current: ${API_URL}\\n\\n3. Check Kaggle notebook output for errors`);
+      alert(`Our Backend Server maybe down/ busy due to many requests at same time.Kindly try the sample files given or try uploading after some time`);
       
       return;
     } finally {

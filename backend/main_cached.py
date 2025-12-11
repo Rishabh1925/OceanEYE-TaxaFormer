@@ -7,6 +7,7 @@ import sys
 import shutil
 import json
 import hashlib
+import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
 import uvicorn
@@ -17,6 +18,41 @@ from pipeline import TaxonomyPipeline
 
 # Add parent directory to path for db imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import analytics
+try:
+    # Try importing from same directory first
+    from .analytics_api import add_analytics_to_app
+    ANALYTICS_AVAILABLE = True
+    print("✅ Analytics module loaded")
+except ImportError:
+    try:
+        # Fallback to direct import
+        import analytics_api
+        add_analytics_to_app = analytics_api.add_analytics_to_app
+        ANALYTICS_AVAILABLE = True
+        print("✅ Analytics module loaded (fallback)")
+    except ImportError:
+        ANALYTICS_AVAILABLE = False
+        print("⚠️ Analytics module not available")
+
+# Import queue system
+try:
+    # Try importing from same directory first
+    from .queue_system import processing_queue, QueueJob
+    QUEUE_AVAILABLE = True
+    print("✅ Queue system loaded")
+except ImportError:
+    try:
+        # Fallback to direct import
+        import queue_system
+        processing_queue = queue_system.processing_queue
+        QueueJob = queue_system.QueueJob
+        QUEUE_AVAILABLE = True
+        print("✅ Queue system loaded (fallback)")
+    except ImportError:
+        QUEUE_AVAILABLE = False
+        print("⚠️ Queue system not available")
 
 # Feature flag for database usage
 USE_DATABASE = os.getenv("USE_DATABASE", "true").lower() == "true"
@@ -56,6 +92,36 @@ pipeline = TaxonomyPipeline()
 TEMP_DIR = "temp_uploads"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
+# Add analytics to the app
+if ANALYTICS_AVAILABLE:
+    add_analytics_to_app(app)
+    print("📊 Analytics endpoints added to main API")
+
+# Add simple analytics as backup
+try:
+    from simple_analytics import add_simple_analytics
+    add_simple_analytics(app)
+    print("📊 Simple Analytics endpoints added")
+except ImportError:
+    print("⚠️ Simple Analytics not available")
+
+# Add queue endpoints
+@app.get("/queue/status")
+async def get_queue_status(session_id: str = "anonymous"):
+    """Get queue status for user"""
+    if not QUEUE_AVAILABLE:
+        return {"status": "disabled"}
+    
+    return processing_queue.get_queue_status(session_id)
+
+@app.get("/queue/stats")
+async def get_queue_stats():
+    """Get overall queue statistics"""
+    if not QUEUE_AVAILABLE:
+        return {"status": "disabled"}
+    
+    return processing_queue.get_queue_stats()
+
 
 def compute_file_hash(file_bytes: bytes) -> str:
     """
@@ -86,17 +152,19 @@ async def root():
 @app.post("/analyze")
 async def analyze_endpoint(
     file: UploadFile = File(...),
-    metadata: Optional[str] = Form(None)
+    metadata: Optional[str] = Form(None),
+    session_id: str = Form("anonymous")
 ):
     """
-    Analyze uploaded sequence file with caching support
+    Analyze uploaded sequence file with queue system and caching support
     
     Args:
         file: Uploaded FASTA/FASTQ file
         metadata: Optional JSON string with sample metadata
+        session_id: User session ID for queue management
         
     Returns:
-        JSON with analysis results, job_id (if database enabled), and cache status
+        JSON with analysis results, job_id, queue status, and cache status
     """
     temp_filepath = None
     parsed_metadata = None
@@ -139,9 +207,70 @@ async def analyze_endpoint(
                     "status": "success",
                     "job_id": cached_job["job_id"],
                     "cached": True,
+                    "queue_bypassed": True,
                     "data": cached_job["result"]
                 }
-            elif cached_job and cached_job.get('status') == 'processing':
+        
+        # Add to queue if queue system is available
+        if QUEUE_AVAILABLE:
+            try:
+                # Check current queue status for user
+                queue_status = processing_queue.get_queue_status(session_id)
+                
+                if queue_status["status"] == "processing":
+                    return {
+                        "status": "processing",
+                        "message": "Your file is currently being processed",
+                        "job_id": queue_status["job_id"],
+                        "progress": queue_status.get("progress", 0),
+                        "estimated_remaining": queue_status.get("estimated_remaining", 0)
+                    }
+                
+                if queue_status["status"] == "queued":
+                    return {
+                        "status": "queued",
+                        "message": queue_status["message"],
+                        "job_id": queue_status["job_id"],
+                        "position": queue_status["position"],
+                        "estimated_wait": queue_status["estimated_wait"]
+                    }
+                
+                # Add new job to queue
+                job_id = str(uuid.uuid4()) if 'uuid' in globals() else f"job_{datetime.now().timestamp()}"
+                queue_job = processing_queue.add_job(
+                    job_id=job_id,
+                    filename=file.filename,
+                    file_size=len(file_bytes),
+                    user_session=session_id
+                )
+                
+                # Check if we can process immediately
+                next_job = await processing_queue.process_next_job()
+                if next_job and next_job.job_id == job_id:
+                    # Process immediately
+                    print(f"🚀 Processing immediately: {file.filename}")
+                else:
+                    # Return queue status
+                    queue_status = processing_queue.get_queue_status(session_id)
+                    return {
+                        "status": "queued",
+                        "message": f"Added to queue. Position #{queue_status['position']} of {queue_status['queue_length']}",
+                        "job_id": job_id,
+                        "position": queue_status["position"],
+                        "estimated_wait": queue_status["estimated_wait"]
+                    }
+                    
+            except Exception as queue_error:
+                print(f"⚠️ Queue error: {queue_error}")
+                return {
+                    "status": "error",
+                    "message": str(queue_error)
+                }
+        
+        # Check for existing processing/failed jobs
+        if USE_DATABASE and db:
+            cached_job = db.get_job_by_hash(file_hash)
+            if cached_job and cached_job.get('status') == 'processing':
                 # Job is still processing - return processing status
                 return {
                     "status": "processing",
@@ -216,6 +345,10 @@ async def analyze_endpoint(
                     print(f"⚠️ Database update failed: {db_error}")
                     # Continue - analysis succeeded even if storage failed
             
+            # Mark queue job as completed
+            if QUEUE_AVAILABLE:
+                processing_queue.complete_job(job_id or "unknown", success=True)
+            
             # Return response
             response = {
                 "status": "success",
@@ -239,6 +372,10 @@ async def analyze_endpoint(
                     db.client.table('analysis_jobs').update(update_data).eq('job_id', job_id).execute()
                 except Exception:
                     pass  # Ignore database errors during failure handling
+            
+            # Mark queue job as failed
+            if QUEUE_AVAILABLE:
+                processing_queue.complete_job(job_id or "unknown", success=False)
             
             raise pipeline_error
         
@@ -493,7 +630,7 @@ if __name__ == "__main__":
     # Configuration
     NGROK_TOKEN = "348roSQj2iERV8fMgVaCYElBgfB_4yPs4jKrwU4U323bzpmJL"
     PORT = 8000
-    USE_NGROK = True  # Set to False for local testing
+    USE_NGROK = False  # Set to False for local testing
     
     # Start server
     start_server(port=PORT, use_ngrok=USE_NGROK, ngrok_token=NGROK_TOKEN)
