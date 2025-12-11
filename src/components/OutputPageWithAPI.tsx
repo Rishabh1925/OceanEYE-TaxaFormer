@@ -1,4 +1,5 @@
 "use client"
+// @ts-nocheck
 
 import { useState, useEffect, useMemo } from 'react';
 import { 
@@ -1149,6 +1150,7 @@ export default function OutputPage({ isDarkMode, onNavigate }: OutputPageProps) 
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

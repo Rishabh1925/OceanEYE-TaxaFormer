@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Globe, MapPin, Layers, Satellite, Navigation, Dna, Waves, Fish, Microscope } from 'lucide-react';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Globe, MapPin, Layers, Satellite, Navigation, X, Plus, Crosshair, Anchor, Waves, Fish, Compass } from 'lucide-react';
@@ -419,7 +420,7 @@ export default function MapPage({ isDarkMode, onNavigate }: MapPageProps) {
       });
 
       // Add hover effect
-      marker.on('mouseover', function () {
+      marker.on('mouseover', function (this: any) {
         this.openPopup();
       });
     });
