@@ -33,7 +33,10 @@ export default function ReportPage({ isDarkMode, onNavigate }: ReportPageProps) 
     const savedData = localStorage.getItem('analysisResults');
     if (savedData) {
       try {
-        setResults(JSON.parse(savedData));
+        const data = JSON.parse(savedData);
+        // Extract sequences array from the data structure
+        const sequences = data.sequences || [];
+        setResults(sequences);
       } catch (e) {
         console.error("Failed to load report data", e);
       }
