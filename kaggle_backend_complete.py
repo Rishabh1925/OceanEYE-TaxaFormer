@@ -829,7 +829,6 @@ def start_server(port: int = 8000, use_ngrok: bool = True, ngrok_token: str = No
         print("="*60)
 
     uvicorn.run(app, host="0.0.0.0", port=port)
-
 if __name__ == "__main__":
     NGROK_TOKEN = "348roSQj2iERV8fMgVaCYElBgfB_4yPs4jKrwU4U323bzpmJL"
     start_server(port=8000, use_ngrok=True, ngrok_token=NGROK_TOKEN)
