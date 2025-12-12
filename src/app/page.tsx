@@ -659,7 +659,7 @@ function HomePage({ isDarkMode, onNavigate, handleScrollTo, handleUpload, handle
       </section>
 
       {/* Marine Biodiversity Data Showcase */}
-      <section className={`py-20 px-4 sm:px-6 lg:px-8 ${isDarkMode ? 'bg-slate-800/30' : 'bg-white/20'}`}>
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
