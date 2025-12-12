@@ -43,6 +43,7 @@ interface SampleFile {
   file_size_mb: number;
   avg_confidence: number;
   novel_species_count: number;
+  recommended?: boolean;
 }
 
 export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) {
@@ -206,12 +207,13 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
       const mockSamples = [
         {
           job_id: "sample_001",
-          filename: "monterey_bay_sample.fasta",
+          filename: "sara_phio_marine_sample.fasta",
           total_sequences: 245,
           created_at: "2024-12-10T14:30:00Z",
           file_size_mb: 12.5,
           avg_confidence: 0.89,
-          novel_species_count: 3
+          novel_species_count: 3,
+          recommended: true
         },
         {
           job_id: "sample_002", 
@@ -345,18 +347,29 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
 
   const getSortedSamples = () => {
     const sorted = [...sampleFiles];
-    switch (sortBy) {
-      case 'latest':
-        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      case 'heavy':
-        return sorted.sort((a, b) => b.file_size_mb - a.file_size_mb);
-      case 'sequences':
-        return sorted.sort((a, b) => b.total_sequences - a.total_sequences);
-      case 'confidence':
-        return sorted.sort((a, b) => b.avg_confidence - a.avg_confidence);
-      default:
-        return sorted;
-    }
+    
+    // Always prioritize recommended samples first
+    const prioritized = sorted.sort((a, b) => {
+      // Recommended samples come first
+      if (a.recommended && !b.recommended) return -1;
+      if (!a.recommended && b.recommended) return 1;
+      
+      // Then apply the selected sorting
+      switch (sortBy) {
+        case 'latest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'heavy':
+          return b.file_size_mb - a.file_size_mb;
+        case 'sequences':
+          return b.total_sequences - a.total_sequences;
+        case 'confidence':
+          return b.avg_confidence - a.avg_confidence;
+        default:
+          return 0;
+      }
+    });
+    
+    return prioritized;
   };
 
   // Load sample files on component mount
@@ -1097,9 +1110,20 @@ export default function UploadPage({ isDarkMode, onNavigate }: UploadPageProps) 
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                        {sample.filename}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          {sample.filename}
+                        </h3>
+                        {sample.recommended && (
+                          <span className={`px-1.5 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${
+                            isDarkMode 
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30' 
+                              : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-700 border border-blue-300/50'
+                          }`}>
+                            ⭐ Recommended
+                          </span>
+                        )}
+                      </div>
                       <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                         {new Date(sample.created_at).toLocaleDateString()}
                       </p>

@@ -10,6 +10,7 @@ export interface SampleFile {
   file_size_mb: number;
   avg_confidence: number;
   novel_species_count: number;
+  recommended?: boolean;
 }
 
 export async function fetchSampleFilesFromSupabase(): Promise<SampleFile[]> {
@@ -75,7 +76,8 @@ export async function fetchSampleFilesFromSupabase(): Promise<SampleFile[]> {
           created_at: job.created_at,
           file_size_mb: estimatedFileSize,
           avg_confidence: avgConfidence / 100,
-          novel_species_count: novelCount
+          novel_species_count: novelCount,
+          recommended: filename.toLowerCase().includes('sara') && filename.toLowerCase().includes('phaeo')
         };
       });
     
