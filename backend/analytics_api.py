@@ -1,6 +1,20 @@
 """
 Analytics API for TaxaFormer
-Privacy-friendly user behavior tracking
+
+This module provides privacy-friendly user behavior tracking for the Taxaformer application.
+It tracks page views, user interactions, and basic usage statistics without collecting
+any personally identifiable information (PII).
+
+Key Features:
+- Anonymous session tracking (no user identification)
+- GDPR compliant (no personal data stored)
+- Optional database storage (works without database)
+- Daily session hash rotation for privacy
+- Automatic data cleanup after 90 days
+
+Author: Learning Developer (Age 16)
+Purpose: Understanding web analytics and user behavior tracking
+Privacy: No PII collected, fully anonymous tracking
 """
 import os
 import sys
@@ -13,30 +27,55 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uuid
 
-# Add parent directory to path for db imports
+# Add parent directory to path for database imports
+# This allows us to import database modules from the parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Feature flag for analytics
+# Feature flag for analytics - can be disabled via environment variable
+# Set USE_ANALYTICS=false to completely disable analytics tracking
 USE_ANALYTICS = os.getenv("USE_ANALYTICS", "true").lower() == "true"
 
-# Initialize database (optional - analytics works without it)
+# Initialize database connection (optional - analytics works without it)
+# If database is not available, analytics will still work but data won't persist
 analytics_db = None
 if USE_ANALYTICS:
     try:
-        # Use the same Supabase connection as main app
+        # Use the same Supabase connection as the main application
+        # This ensures consistency and reduces configuration complexity
         from supabase import create_client
+        
+        # Database credentials (should be moved to environment variables for security)
         SUPABASE_URL = os.getenv("SUPABASE_URL", "https://nbnyhdwbnxbheombbhtv.supabase.co")
         SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ibnloZHdibnhiaGVvbWJiaHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MDIyNDksImV4cCI6MjA4MDk3ODI0OX0.u5DxN1eX-K85WepTNCEs5sJw9M13YLmGm5pVe1WKy34")
         
+        # Create Supabase client for analytics data storage
         analytics_db = create_client(SUPABASE_URL, SUPABASE_KEY)
         print("✅ Analytics database connected")
     except Exception as e:
+        # Graceful fallback - analytics will work without database
         print(f"⚠️ Analytics database not available: {e}")
         print("⚠️ Analytics will be disabled")
         USE_ANALYTICS = False
 
-# Pydantic models for request validation
+# Pydantic models for request validation and type safety
+# These define the structure of data we expect from the frontend
+
 class SessionCreate(BaseModel):
+    """
+    Model for creating a new user session.
+    
+    This captures basic device and browser information for analytics
+    without collecting any personally identifiable information.
+    
+    Attributes:
+        deviceType (str): Device category (desktop, mobile, tablet)
+        browserName (str): Browser name (Chrome, Firefox, Safari, etc.)
+        referrer (str): Referring website (where user came from)
+        userAgent (str): Browser user agent string (for device detection)
+        screenResolution (str): Screen resolution (e.g., "1920x1080")
+        timezone (str): User's timezone (e.g., "America/New_York")
+        language (str): Browser language preference (e.g., "en-US")
+    """
     deviceType: str
     browserName: str
     referrer: str
@@ -46,6 +85,16 @@ class SessionCreate(BaseModel):
     language: str
 
 class SessionUpdate(BaseModel):
+    """
+    Model for updating an existing session with activity data.
+    
+    This tracks user engagement and session duration without
+    identifying individual users.
+    
+    Attributes:
+        lastActivity (str): ISO timestamp of last user activity
+        pageCount (int): Number of pages viewed in this session
+    """
     lastActivity: str
     pageCount: int
 

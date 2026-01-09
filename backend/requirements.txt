@@ -1,22 +1,116 @@
 # Taxaformer Backend Dependencies
+# 
+# This file lists all Python packages needed to run the Taxaformer backend API.
+# Install these with: pip install -r requirements.txt
+#
+# Author: Learning Developer (Age 16)
+# Purpose: Educational bioinformatics web API dependencies
 
-# Core API Framework
+# ============================================================================
+# CORE API FRAMEWORK
+# ============================================================================
+
+# FastAPI - Modern Python web framework for building APIs
+# - Automatic OpenAPI/Swagger documentation
+# - Built-in data validation with Pydantic
+# - Async support for better performance
+# - Easy to learn and use for beginners
 fastapi==0.115.5
+
+# Uvicorn - ASGI server for running FastAPI applications
+# - High performance async server
+# - Supports WebSockets and HTTP/2
+# - [standard] includes extra dependencies for better performance
+# - Required to actually run the FastAPI app
 uvicorn[standard]==0.32.1
 
-# File handling
+# ============================================================================
+# FILE HANDLING & UPLOADS
+# ============================================================================
+
+# Python Multipart - Handles file uploads in FastAPI
+# - Parses multipart/form-data requests (file uploads)
+# - Required for the UploadFile functionality in FastAPI
+# - Allows users to upload FASTA/FASTQ files through the web interface
 python-multipart==0.0.20
 
-# Ngrok tunneling for Kaggle hosting
+# ============================================================================
+# NETWORKING & TUNNELING
+# ============================================================================
+
+# PyNgrok - Python wrapper for ngrok tunneling service
+# - Creates secure tunnels to localhost for public access
+# - Essential for hosting on Kaggle notebooks (no public IP)
+# - Allows frontend to connect to backend running in Kaggle
+# - Free tier available, paid plans for production use
 pyngrok==7.2.2
 
-# Data processing (use latest compatible with Python 3.13)
+# ============================================================================
+# DATA PROCESSING & ANALYSIS
+# ============================================================================
+
+# NumPy - Fundamental package for scientific computing
+# - Used for numerical operations and statistics
+# - Required for calculating averages, confidence scores
+# - Version 2.0+ is compatible with Python 3.13
+# - Core dependency for most scientific Python packages
 numpy>=2.0.0
 
-# Testing
+# ============================================================================
+# TESTING & DEVELOPMENT
+# ============================================================================
+
+# Requests - HTTP library for making API calls
+# - Used in test files to test API endpoints
+# - Simple and elegant HTTP requests
+# - Essential for integration testing
+# - Most popular Python HTTP library
 requests==2.32.3
 
-# Optional: For advanced analysis (uncomment if needed)
+# ============================================================================
+# OPTIONAL ADVANCED FEATURES (commented out for simplicity)
+# ============================================================================
+# 
+# Uncomment these if you want to add more advanced analysis features:
+#
+# # Pandas - Data manipulation and analysis library
+# # - Useful for handling large datasets and CSV export
+# # - Provides DataFrame structure for tabular data
 # pandas>=2.2.0
+#
+# # BioPython - Bioinformatics library for sequence analysis
+# # - Real FASTA/FASTQ parsing and validation
+# # - Sequence alignment and similarity calculations
+# # - BLAST integration for real taxonomic classification
 # biopython>=1.84
+#
+# # Scikit-learn - Machine learning library
+# # - Clustering algorithms (K-means, DBSCAN)
+# # - Dimensionality reduction (PCA, t-SNE, UMAP)
+# # - Classification and novelty detection
 # scikit-learn>=1.5.0
+#
+# # Matplotlib/Seaborn - Plotting libraries
+# # - Generate publication-quality figures
+# # - Create heatmaps and statistical plots
+# matplotlib>=3.8.0
+# seaborn>=0.13.0
+
+# ============================================================================
+# INSTALLATION NOTES
+# ============================================================================
+#
+# To install all dependencies:
+#   pip install -r requirements.txt
+#
+# For Kaggle notebooks:
+#   !pip install -r requirements.txt
+#
+# For development with optional features:
+#   1. Uncomment the packages you want above
+#   2. Run: pip install -r requirements.txt
+#
+# Troubleshooting:
+#   - If you get version conflicts, try: pip install --upgrade pip
+#   - For Python 3.13 compatibility issues, use the exact versions specified
+#   - On some systems you might need: python -m pip install -r requirements.txt
