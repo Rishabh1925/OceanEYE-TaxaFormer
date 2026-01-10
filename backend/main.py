@@ -8,25 +8,83 @@ The server can run locally or use ngrok tunneling for hosting on Kaggle notebook
 Author: Learning Developer (Age 16)
 Purpose: Educational bioinformatics web API
 Features: File upload, sequence analysis, CORS support, ngrok tunneling
+
+Batch 2 Updates (9 hours):
+- Improved error handling with specific error codes
+- Better HTTP status codes for different error types
+- Client-side file size check before upload
+- Structured error responses with actionable messages
+- Added centralized logging system with performance tracking
+- Memory usage monitoring for large files
+- Request/response logging with timing
+- File validation statistics tracking
 """
 import os
 import shutil
 import json
+import psutil
 from datetime import datetime
 from typing import Dict, Any
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pyngrok import ngrok
-from pipeline import TaxonomyPipeline
+from pipeline import (
+    TaxonomyPipeline, 
+    PipelineError, 
+    FileSizeError, 
+    InvalidSequenceError, 
+    EmptyFileError, 
+    FileParseError
+)
+from logger import performance_logger
+
+# Batch 2: Configuration constants for validation
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50MB - must match pipeline.py
+ALLOWED_EXTENSIONS = ['.fasta', '.fa', '.fastq', '.fq', '.txt']
 
 # Initialize FastAPI application with metadata
-# This creates the main web API that handles HTTP requests
 app = FastAPI(
     title="Taxaformer API",
-    description="Taxonomic analysis pipeline for DNA sequences",
-    version="1.0.0"
+    description="Taxonomic analysis pipeline for DNA sequences with enhanced error handling",
+    version="1.1.0"  # Batch 2: Version bump
 )
+
+# Batch 2: Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all requests with timing and memory usage."""
+    start_time = datetime.now()
+    
+    # Get memory usage before request
+    process = psutil.Process()
+    memory_before = process.memory_info().rss / 1024 / 1024  # MB
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Calculate metrics
+    processing_time = (datetime.now() - start_time).total_seconds()
+    memory_after = process.memory_info().rss / 1024 / 1024  # MB
+    memory_used = memory_after - memory_before
+    
+    # Log request details
+    performance_logger.log_performance_metrics(
+        operation="http_request",
+        duration=processing_time,
+        additional_metrics={
+            "method": request.method,
+            "url": str(request.url),
+            "status_code": response.status_code,
+            "memory_before_mb": round(memory_before, 2),
+            "memory_after_mb": round(memory_after, 2),
+            "memory_used_mb": round(memory_used, 2),
+            "client_ip": request.client.host if request.client else "unknown"
+        }
+    )
+    
+    return response
 
 # Configure Cross-Origin Resource Sharing (CORS)
 # This allows the frontend (running on a different port) to make requests to this API
@@ -86,116 +144,224 @@ async def analyze_endpoint(file: UploadFile = File(...)):
     """
     Main analysis endpoint - processes uploaded DNA sequence files.
     
-    This is the core endpoint that accepts FASTA/FASTQ files and returns
-    taxonomic analysis results. The file is temporarily saved, processed
-    through the analysis pipeline, and then deleted.
+    Batch 2 Updates:
+    - Returns specific error codes for different failure types
+    - Validates file size before processing
+    - Returns warnings for non-fatal issues
+    - Better HTTP status codes (413 for too large, 422 for invalid content)
     
     Args:
         file (UploadFile): Uploaded sequence file (FASTA/FASTQ format)
             - Supported extensions: .fasta, .fa, .fastq, .fq, .txt
-            - File size should be reasonable (no explicit limit set)
+            - Maximum file size: 50MB
             - Must contain valid DNA sequences (A, T, G, C, N)
             
     Returns:
         Dict[str, Any]: Analysis results in JSON format:
             - status: "success" or "error"
             - data: Complete analysis results (if successful)
-                - metadata: File statistics and processing info
-                - taxonomy_summary: Counts by taxonomic group
-                - sequences: Detailed results for each sequence
-                - cluster_data: 3D visualization coordinates
+            - warnings: List of non-fatal issues encountered
+            - error_code: Specific error code (if failed)
             - message: Error description (if failed)
-            
-    Raises:
-        HTTPException: 400 error for invalid files or missing filename
-        
-    Example:
-        POST /analyze
-        Content-Type: multipart/form-data
-        Body: [FASTA file content]
-        
-        Response: {
-            "status": "success",
-            "data": {
-                "metadata": {"totalSequences": 10, "avgConfidence": 85, ...},
-                "taxonomy_summary": [{"name": "Bacteria", "value": 5, "color": "#EF4444"}, ...],
-                "sequences": [...],
-                "cluster_data": [...]
-            }
-        }
+            - suggestion: How to fix the error (if failed)
     """
     temp_filepath = None
     
     try:
         # Step 1: Validate that a filename was provided
         if not file.filename:
-            raise HTTPException(status_code=400, detail="No filename provided")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "error_code": "NO_FILENAME",
+                    "message": "No filename provided",
+                    "suggestion": "Please select a file before uploading"
+                }
+            )
         
         # Step 2: Check if the file extension is supported
-        # We only accept common sequence file formats
-        allowed_extensions = ['.fasta', '.fa', '.fastq', '.fq', '.txt']
         file_ext = os.path.splitext(file.filename)[1].lower()
-        if file_ext not in allowed_extensions:
-            raise HTTPException(
+        if file_ext not in ALLOWED_EXTENSIONS:
+            return JSONResponse(
                 status_code=400,
-                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
+                content={
+                    "status": "error",
+                    "error_code": "INVALID_FILE_TYPE",
+                    "message": f"Unsupported file type: {file_ext}",
+                    "suggestion": f"Please upload a file with one of these extensions: {', '.join(ALLOWED_EXTENSIONS)}",
+                    "allowed_extensions": ALLOWED_EXTENSIONS
+                }
             )
         
         # Step 3: Save the uploaded file to a temporary location
-        # We use timestamp to ensure unique filenames and avoid conflicts
         temp_filepath = os.path.join(TEMP_DIR, f"temp_{datetime.now().timestamp()}_{file.filename}")
         
         # Write the uploaded file content to disk
         with open(temp_filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Log the file processing start (helpful for debugging)
+        # Batch 2: Check file size after saving (more accurate than content-length header)
         file_size = os.path.getsize(temp_filepath)
+        if file_size > MAX_UPLOAD_SIZE:
+            # Clean up the oversized file
+            os.remove(temp_filepath)
+            return JSONResponse(
+                status_code=413,  # Payload Too Large
+                content={
+                    "status": "error",
+                    "error_code": "FILE_TOO_LARGE",
+                    "message": f"File size ({file_size / 1024 / 1024:.2f}MB) exceeds maximum allowed (50MB)",
+                    "suggestion": "Please upload a smaller file or split your sequences into multiple files",
+                    "file_size_bytes": file_size,
+                    "max_size_bytes": MAX_UPLOAD_SIZE
+                }
+            )
+        
         print(f"Processing file: {file.filename} ({file_size} bytes)")
         
+        # Batch 2: Log memory usage before processing
+        process = psutil.Process()
+        memory_before = process.memory_info().rss / 1024 / 1024  # MB
+        performance_logger.log_performance_metrics(
+            operation="file_upload",
+            duration=0,
+            additional_metrics={
+                "filename": file.filename,
+                "file_size_bytes": file_size,
+                "memory_before_mb": round(memory_before, 2)
+            }
+        )
+        
         # Step 4: Process the file through the analysis pipeline
-        # Time the processing to provide performance feedback
+        performance_logger.start_timer("pipeline_processing")
         start_time = datetime.now()
         result_data = pipeline.process_file(temp_filepath, file.filename)
-        processing_time = (datetime.now() - start_time).total_seconds()
+        processing_time = performance_logger.end_timer("pipeline_processing")
+        
+        # Batch 2: Log memory usage after processing
+        memory_after = process.memory_info().rss / 1024 / 1024  # MB
+        memory_used = memory_after - memory_before
         
         # Step 5: Add processing time to the metadata
-        # This helps users understand performance and provides debugging info
         if "metadata" in result_data:
             result_data["metadata"]["processingTime"] = f"{processing_time:.2f}s"
+            result_data["metadata"]["memoryUsedMB"] = round(memory_used, 2)
         
-        # Log successful completion
-        print(f"Analysis complete: {file.filename} ({processing_time:.2f}s)")
+        # Batch 2: Log successful processing with detailed metrics
+        performance_logger.log_file_processing(
+            filename=file.filename,
+            file_size=file_size,
+            sequence_count=result_data.get("metadata", {}).get("totalSequences", 0),
+            processing_time=processing_time,
+            warnings=result_data.get("warnings", [])
+        )
         
-        # Step 6: Return the results in the expected format
-        return {
+        print(f"Analysis complete: {file.filename} ({processing_time:.2f}s, {memory_used:.1f}MB used)")
+        
+        # Step 6: Return the results with any warnings
+        response = {
             "status": "success",
             "data": result_data
         }
         
+        # Batch 2: Include warnings if any were generated
+        if result_data.get("warnings"):
+            response["warnings"] = result_data["warnings"]
+            response["warning_count"] = len(result_data["warnings"])
+        
+        return response
+    
+    # Batch 2: Handle specific pipeline errors with appropriate status codes and logging
+    except FileSizeError as e:
+        performance_logger.log_error("FILE_TOO_LARGE", e.message, file.filename, e.details)
+        return JSONResponse(
+            status_code=413,
+            content={
+                "status": "error",
+                "error_code": e.error_code,
+                "message": e.message,
+                "suggestion": "Please upload a smaller file (max 50MB)",
+                "details": e.details
+            }
+        )
+    
+    except EmptyFileError as e:
+        performance_logger.log_error("EMPTY_FILE", e.message, file.filename, e.details)
+        return JSONResponse(
+            status_code=422,  # Unprocessable Entity
+            content={
+                "status": "error",
+                "error_code": e.error_code,
+                "message": e.message,
+                "suggestion": "Please ensure your file contains valid FASTA/FASTQ sequences with headers (>) and DNA data",
+                "details": e.details
+            }
+        )
+    
+    except InvalidSequenceError as e:
+        performance_logger.log_error("INVALID_SEQUENCE", e.message, file.filename, e.details)
+        return JSONResponse(
+            status_code=422,
+            content={
+                "status": "error",
+                "error_code": e.error_code,
+                "message": e.message,
+                "suggestion": "Please check your sequences contain only valid DNA characters (A, T, G, C, N)",
+                "details": e.details
+            }
+        )
+    
+    except FileParseError as e:
+        performance_logger.log_error("PARSE_ERROR", e.message, file.filename, e.details)
+        return JSONResponse(
+            status_code=422,
+            content={
+                "status": "error",
+                "error_code": e.error_code,
+                "message": e.message,
+                "suggestion": "Please ensure your file is in valid FASTA or FASTQ format",
+                "details": e.details
+            }
+        )
+    
+    except PipelineError as e:
+        performance_logger.log_error("PIPELINE_ERROR", e.message, file.filename, e.details)
+        # Catch-all for other pipeline errors
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error_code": e.error_code,
+                "message": e.message,
+                "details": e.details
+            }
+        )
+        
     except HTTPException:
-        # Re-raise HTTP exceptions (like 400 errors) without modification
         raise
         
     except Exception as e:
-        # Handle any other errors that occur during processing
+        performance_logger.log_error("UNEXPECTED_ERROR", str(e), getattr(file, 'filename', 'unknown'))
         print(f"Error processing file: {str(e)}")
         import traceback
-        traceback.print_exc()  # Print full error traceback for debugging
+        traceback.print_exc()
         
-        # Return a user-friendly error response
-        return {
-            "status": "error",
-            "message": f"Analysis failed: {str(e)}"
-        }
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error_code": "INTERNAL_ERROR",
+                "message": f"Analysis failed: {str(e)}",
+                "suggestion": "Please try again or contact support if the problem persists"
+            }
+        )
         
     finally:
-        # Step 7: Clean up the temporary file (always runs, even if there's an error)
         if temp_filepath and os.path.exists(temp_filepath):
             try:
                 os.remove(temp_filepath)
             except Exception as e:
-                # Log cleanup errors but don't fail the request
                 print(f"Warning: Could not delete temp file: {e}")
 
 
@@ -204,29 +370,49 @@ async def health_check():
     """
     Detailed health check endpoint for monitoring and debugging.
     
-    This endpoint provides more detailed information about the API status
-    than the root endpoint. It's useful for monitoring systems and debugging.
-    
-    Returns:
-        Dict[str, Any]: Detailed health information:
-            - status: Overall health status
-            - pipeline: Whether the analysis pipeline is initialized
-            - temp_dir: Whether the temporary directory exists
-            - timestamp: Current UTC timestamp
-            
-    Example:
-        GET /health
-        Response: {
-            "status": "healthy",
-            "pipeline": "initialized", 
-            "temp_dir": true,
-            "timestamp": "2024-01-08T10:30:00.000Z"
-        }
+    Batch 2 Updates:
+    - Added performance statistics
+    - Memory usage monitoring
+    - Processing queue status
     """
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    
     return {
         "status": "healthy",
         "pipeline": "initialized",
         "temp_dir": os.path.exists(TEMP_DIR),
+        "timestamp": datetime.utcnow().isoformat(),
+        "performance_stats": performance_logger.get_stats(),
+        "system_info": {
+            "memory_usage_mb": round(memory_info.rss / 1024 / 1024, 2),
+            "cpu_percent": psutil.cpu_percent(),
+            "disk_usage_percent": psutil.disk_usage('.').percent
+        }
+    }
+
+
+@app.get("/stats")
+async def get_performance_stats():
+    """
+    Batch 2: New endpoint for detailed performance statistics.
+    
+    Returns processing metrics, error rates, and system performance data.
+    Useful for monitoring and optimization.
+    """
+    stats = performance_logger.get_stats()
+    process = psutil.Process()
+    
+    return {
+        "processing_stats": stats,
+        "system_metrics": {
+            "memory_usage_mb": round(process.memory_info().rss / 1024 / 1024, 2),
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "available_memory_mb": round(psutil.virtual_memory().available / 1024 / 1024, 2),
+            "disk_free_gb": round(psutil.disk_usage('.').free / 1024 / 1024 / 1024, 2)
+        },
+        "error_rate": round(stats["errors"] / max(stats["files_processed"], 1) * 100, 2),
+        "warning_rate": round(stats["warnings"] / max(stats["total_sequences"], 1) * 100, 2),
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -235,27 +421,13 @@ def start_server(port: int = 8000, use_ngrok: bool = True, ngrok_token: str = No
     """
     Start the FastAPI server with optional ngrok tunneling.
     
-    This function handles server startup and can optionally create an ngrok tunnel
-    for public access. This is especially useful when running on Kaggle notebooks
-    where you need external access to the API.
-    
-    Args:
-        port (int): Port number to run the server on (default: 8000)
-        use_ngrok (bool): Whether to create an ngrok tunnel (default: True)
-        ngrok_token (str): Ngrok authentication token (required if use_ngrok=True)
-            Get your token from: https://dashboard.ngrok.com/get-started/your-authtoken
-            
-    Raises:
-        ValueError: If ngrok_token is not provided when use_ngrok=True
-        Exception: If ngrok tunnel creation fails
-        
-    Example:
-        # Start with ngrok tunnel (for Kaggle/Colab)
-        start_server(port=8000, use_ngrok=True, ngrok_token="your_token_here")
-        
-        # Start locally only
-        start_server(port=8000, use_ngrok=False)
+    Batch 2 Updates:
+    - Added startup logging
+    - Performance monitoring initialization
     """
+    # Batch 2: Log application startup
+    performance_logger.log_startup()
+    
     if use_ngrok:
         # Validate that ngrok token is provided
         if not ngrok_token:
