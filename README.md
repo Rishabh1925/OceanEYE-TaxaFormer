@@ -397,6 +397,16 @@ cd backend && python main.py
 
 ---
 
+## Future Scope
+
+- Expand the marine species dataset to improve classification coverage.
+- Enhance model accuracy through further fine-tuning and larger training datasets.
+- Integrate real-time underwater video analysis for continuous monitoring.
+- Develop a mobile-friendly platform for researchers and conservation teams.
+- Incorporate additional environmental data for richer marine ecosystem insights.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Here's how to get started:
